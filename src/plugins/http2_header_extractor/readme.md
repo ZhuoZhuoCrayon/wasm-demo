@@ -18,5 +18,5 @@ tinygo build -o http2_header_extractor.wasm -gc=custom -tags=custommalloc -targe
 #### Apply
 
 ```shell
-deepflow-ctl plugin create  --type wasm --image http2_header_extractor.wasm --name http2_header_extractor
+deepflow-ctl plugin create --type wasm --image http2_header_extractor.wasm --name http2_header_extractor
 ```

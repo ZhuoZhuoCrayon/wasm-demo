@@ -39,17 +39,16 @@ func (p httpHook) HookIn() []sdk.HookBitmap {
 func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 	baseCtx := &ctx.BaseCtx
 
-	sdk.Info("L7: %d", baseCtx.L7)
-
 	if baseCtx.L7 != GRPC {
 		return sdk.ActionNext()
 	}
+
+	sdk.Info("L7: %d", baseCtx.L7)
 
 	payload, err := baseCtx.GetPayload()
 	if err != nil {
 		return sdk.ActionAbortWithErr(err)
 	}
-	sdk.Warn("payload(ascii): %s", payload)
 	sdk.Warn("payload: %x", payload)
 
 	attr := []sdk.KeyVal{
@@ -68,7 +67,35 @@ func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 }
 
 func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
-	return sdk.ActionNext()
+
+	baseCtx := &ctx.BaseCtx
+
+	if baseCtx.L7 != GRPC {
+		return sdk.ActionNext()
+	}
+
+	sdk.Info("resp L7: %d", baseCtx.L7)
+
+	payload, err := baseCtx.GetPayload()
+	if err != nil {
+		return sdk.ActionAbortWithErr(err)
+	}
+
+	sdk.Warn("payload: %x", payload)
+
+	attr := []sdk.KeyVal{
+		{
+			Key: "openid",
+			Val: "123456789",
+		},
+	}
+
+	trace := &sdk.Trace{
+		TraceID: "123456789",
+		SpanID:  "123456788",
+	}
+
+	return sdk.HttpRespActionAbortWithResult(nil, trace, attr)
 }
 
 func (p httpHook) OnCheckPayload(baseCtx *sdk.ParseCtx) (uint8, string) {
