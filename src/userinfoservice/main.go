@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/userinfoservice/protos/userinfo"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -14,15 +16,39 @@ type server struct {
 	pb.UnimplementedUserInfoServiceServer
 }
 
+type getUserInfoError struct {
+	userID int32
+}
+
+var (
+	openIdNotFoundError = errors.New("openid not found")
+)
+
+func (e getUserInfoError) Error() string {
+	return fmt.Sprintf("faied to get user(%d) info", e.userID)
+}
+
 func (s *server) GetUserInfo(ctx context.Context, req *pb.GetUserInfoRequest) (*pb.UserInfo, error) {
 
-	md := metadata.Pairs("open-id", "a-1234567Resp", "trace-id", "1234567890abcdef")
-	grpc.SetHeader(ctx, md)
+	reqMetadata, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, getUserInfoError{userID: req.UserId}
+	}
 
-	println(req.UserId)
+	openid, ok := reqMetadata["openid"]
+	if !ok {
+		return nil, openIdNotFoundError
+	}
+
+	md := metadata.Pairs("openid", openid[0])
+	// 响应前发送
+	grpc.SetHeader(ctx, md)
+	// 在响应的 DATA 帧后发送
+	// grpc.SetTrailer(ctx, md)
+
 	return &pb.UserInfo{
-		Openid:   "1234567890",
-		UserId:   42,
+		Openid:   openid[0],
+		UserId:   req.UserId,
 		Username: "John Doe",
 		Email:    "john.doe@example.com",
 		Phones: []*pb.PhoneNumber{
@@ -42,8 +68,6 @@ func (s *server) GetUserInfo(ctx context.Context, req *pb.GetUserInfoRequest) (*
 	}, nil
 }
 
-// var _ pb.UserInfoServiceServer = server{}
-
 func main() {
 	// 创建一个 gRPC 服务器
 	s := grpc.NewServer()
@@ -56,7 +80,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
 	// 启动 gRPC 服务器
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

@@ -20,21 +20,22 @@ func main() {
 
 	// 创建一个 UserInfoService 客户端
 	client := pb.NewUserInfoServiceClient(conn)
+	for i := 1; i < 4; i++ {
+		// 构造一个 GetUserRequest
+		request := &pb.GetUserInfoRequest{
+			UserId: int32(i),
+		}
+		openid := fmt.Sprintf("openid-010-%04d", i)
+		md := metadata.New(map[string]string{"openid": openid})
 
-	// 构造一个 GetUserRequest
-	request := &pb.GetUserInfoRequest{
-		UserId: 42,
+		ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+		// 调用 GetUser 方法
+		response, err := client.GetUserInfo(ctx, request)
+		if err != nil {
+			log.Fatalf("failed to get user: %v", err)
+		}
+		// 打印 GetUser 方法的返回结果
+		fmt.Printf("Response: %+v\n", response)
 	}
-
-	md := metadata.New(map[string]string{"request-open-id": "a-1234567Req"})
-	ctx := metadata.NewOutgoingContext(context.Background(), md)
-
-	// 调用 GetUser 方法
-	response, err := client.GetUserInfo(ctx, request)
-	if err != nil {
-		log.Fatalf("failed to get user: %v", err)
-	}
-
-	// 打印 GetUser 方法的返回结果
-	fmt.Printf("Response: %+v\n", response)
 }
