@@ -133,7 +133,7 @@ func readFramePayload(p []byte, fh FrameHeader) (remain []byte, fp []byte, err e
 
 // parse 解析 HTTP2 payload
 func parse(payload []byte) (headers map[string]string, err error) {
-	sdk.Info("start to parse Payload: %x", payload)
+	sdk.Warn("start to parse Payload: %x", payload)
 	headers = make(map[string]string, len(ExpectedHeaderFields))
 	hd := hpack.NewDecoder(4096, func(hf hpack.HeaderField) {
 		if _, ok := ExpectedHeaderFields[hf.Name]; ok {
@@ -213,10 +213,10 @@ func (p httpHook) HookIn() []sdk.HookBitmap {
 
 func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 	baseCtx := &ctx.BaseCtx
-	if baseCtx.L7 != GRPC {
+	if baseCtx.L7 != GRPC || baseCtx.DstPort != 9000 {
 		return sdk.ActionNext()
 	}
-	sdk.Info("L7: %d", baseCtx.L7)
+	sdk.Warn("[Request] L7: %d", baseCtx.L7)
 
 	payload, err := baseCtx.GetPayload()
 	if err != nil {
@@ -233,10 +233,10 @@ func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 
 func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
 	baseCtx := &ctx.BaseCtx
-	if baseCtx.L7 != GRPC {
+	if baseCtx.L7 != GRPC || baseCtx.DstPort != 9000 {
 		return sdk.ActionNext()
 	}
-	sdk.Info("resp L7: %d", baseCtx.L7)
+	sdk.Warn("[Response] L7: %d", baseCtx.L7)
 
 	payload, err := baseCtx.GetPayload()
 	if err != nil {
