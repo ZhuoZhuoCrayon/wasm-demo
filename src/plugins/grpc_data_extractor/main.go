@@ -19,10 +19,10 @@ package main
 import (
 	"encoding/binary"
 	"errors"
+	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/plugins/grpc_data_extractor/protos"
 	"github.com/deepflowio/deepflow-wasm-go-sdk/sdk"
-	"golang.org/x/net/http2/hpack"
-	// 将 nottinygc 作为 TinyGo 编译 WASI 的一个替代内存分配器，默认的内存分配器在数据量大的场景会有性能问题
-	_ "github.com/wasilibs/nottinygc"
+	"reflect"
+	"strconv"
 )
 
 type FrameType uint8
@@ -34,22 +34,22 @@ func (f Flags) Has(v Flags) bool {
 }
 
 const (
-	GRPC                uint8     = 41
-	FrameHeaderLen      int       = 9
-	FrameTypeMax        FrameType = 0x9
-	FrameHeaders        FrameType = 0x1
-	FrameContinuation   FrameType = 0x9
-	FlagHeadersPadded   Flags     = 0x8
-	FlagHeadersPriority Flags     = 0x20
+	GRPC           uint8     = 41
+	FrameHeaderLen int       = 9
+	FrameTypeMax   FrameType = 0x9
+	FrameData      FrameType = 0x0
+	FlagDataPadded Flags     = 0x8
+	FlagEndStream  Flags     = 0x1
 )
 
 var (
-	ParsePayloadError = errors.New("failed to l7 Payload")
-	ExtractError      = errors.New("failed to extract headers")
+	ParsePayloadError = errors.New("failed to l7 payload")
+	ExtractError      = errors.New("failed to extract data")
 )
 
-var ExpectedHeaderFields = map[string]bool{
-	"openid": true,
+var ExpectedDataFields = map[string]bool{
+	"Openid": true,
+	"UserId": true,
 }
 
 type FrameHeader struct {
@@ -97,27 +97,18 @@ func frameOverflow(p []byte, fh FrameHeader) bool {
 	return false
 }
 
-func readHeaderBlockFragment(p []byte, fh FrameHeader) (remain []byte, bf []byte, err error) {
+func readDataFramePayload(p []byte, fh FrameHeader) (remain []byte, dp []byte, err error) {
 	if isOverflow := frameOverflow(p, fh); isOverflow {
 		return nil, nil, ParsePayloadError
 	}
 	var padLength uint8
-	if fh.Flags.Has(FlagHeadersPadded) {
+	if fh.Flags.Has(FlagDataPadded) {
 		if p, padLength, err = readByte(p); err != nil {
 			return nil, nil, err
 		}
+	} else {
+		padLength = 0
 	}
-	if fh.Flags.Has(FlagHeadersPriority) {
-		// read E + Stream Dependency
-		if p, _, err = readUint32(p); err != nil {
-			return nil, nil, err
-		}
-		// read Weight
-		if p, _, err = readByte(p); err != nil {
-			return nil, nil, err
-		}
-	}
-
 	if len(p)-int(padLength) < 0 || int(padLength) > int(fh.Length) {
 		return nil, nil, ParsePayloadError
 	}
@@ -131,41 +122,56 @@ func readFramePayload(p []byte, fh FrameHeader) (remain []byte, fp []byte, err e
 	return p[fh.Length:], p[:fh.Length], nil
 }
 
-// parse 解析 HTTP2 payload
-func parse(payload []byte) (headers map[string]string, err error) {
-	sdk.Warn("start to l7 Payload: %x", payload)
-	headers = make(map[string]string, len(ExpectedHeaderFields))
-	hd := hpack.NewDecoder(4096, func(hf hpack.HeaderField) {
-		if _, ok := ExpectedHeaderFields[hf.Name]; ok {
-			headers[hf.Name] = hf.Value
+func checkAndAddFieldsToMap(s interface{}, fields map[string]bool, kv map[string]string) {
+	v := reflect.ValueOf(s).Elem()
+	for field := range fields {
+		f := v.FieldByName(field)
+		if f.IsValid() {
+			switch f.Kind() {
+			case reflect.String:
+				kv[field] = f.String()
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				kv[field] = strconv.FormatInt(f.Int(), 10)
+			}
 		}
-	})
+	}
+}
+
+// parse 解析 HTTP2 payload
+func parse(payload []byte, isResp bool) (kv map[string]string, err error) {
+	sdk.Warn("start to l7 Payload: %x", payload)
 
 	p := payload
 	var fh FrameHeader
-
+	kv = make(map[string]string, len(ExpectedDataFields))
 	// 输入 wasm 插件的 Payload 可能存在数据截断的情况，使用 break 结束循环而不是 return nil, err 来尽可能匹配前面符合规则的帧
 	for len(p) > FrameHeaderLen {
 		if p, fh, err = readFrameHeader(p); err != nil {
 			break
 		}
 		sdk.Info("[l7] FrameType -> %#x", fh.Type)
-
-		if fh.Type == FrameHeaders {
-			var headerBlockFragment []byte
-			if p, headerBlockFragment, err = readHeaderBlockFragment(p, fh); err != nil {
+		if fh.Type == FrameData {
+			var dataPayload []byte
+			if p, dataPayload, err = readDataFramePayload(p, fh); err != nil {
 				break
 			}
-			if _, err = hd.Write(headerBlockFragment); err != nil {
-				break
-			}
-		} else if fh.Type == FrameContinuation {
-			var headerBlockFragment []byte
-			if p, headerBlockFragment, err = readFramePayload(p, fh); err != nil {
-				break
-			}
-			if _, err = hd.Write(headerBlockFragment); err != nil {
-				break
+			sdk.Info("[l7] DataPayload -> %x, isResp -> %v", dataPayload[5:], isResp)
+			if isResp {
+				resp := &pb.UserInfo{}
+				if err = resp.UnmarshalVT(dataPayload[5:]); err != nil {
+					sdk.Warn("[l7] failed to unmarshal resp payload")
+					break
+				}
+				sdk.Info("[l7] resp -> %v", resp)
+				checkAndAddFieldsToMap(resp, ExpectedDataFields, kv)
+			} else {
+				req := &pb.GetUserInfoRequest{}
+				if err = req.UnmarshalVT(dataPayload[5:]); err != nil {
+					sdk.Warn("[l7] failed to unmarshal req payload")
+					break
+				}
+				sdk.Info("[l7] req -> %v", req)
+				checkAndAddFieldsToMap(req, ExpectedDataFields, kv)
 			}
 		} else {
 			if p, _, err = readFramePayload(p, fh); err != nil {
@@ -173,31 +179,30 @@ func parse(payload []byte) (headers map[string]string, err error) {
 			}
 		}
 	}
-	return headers, nil
+	return kv, nil
 }
 
 type Extractor struct {
+	IsResp  bool
 	Payload []byte
 }
 
 func (e *Extractor) do() ([]sdk.KeyVal, *sdk.Trace, error) {
-	headers, err := parse(e.Payload)
-	if err != nil {
+	kv, err := parse(e.Payload, e.IsResp)
+	if err != nil || kv == nil {
 		return nil, nil, ExtractError
 	}
-	sdk.Info("extract headers: %v", headers)
-	if len(headers) == 0 {
+	sdk.Info("extract kv: %v", kv)
+	if len(kv) == 0 {
 		return nil, nil, ExtractError
 	}
 
-	attrs := make([]sdk.KeyVal, 0, len(headers))
-	for k, v := range headers {
+	attrs := make([]sdk.KeyVal, 0, len(kv))
+	for k, v := range kv {
 		attrs = append(attrs, sdk.KeyVal{Key: k, Val: v})
 	}
 
-	trace := &sdk.Trace{
-		TraceID: attrs[0].Val,
-	}
+	trace := &sdk.Trace{}
 	return attrs, trace, nil
 }
 
@@ -223,7 +228,7 @@ func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 		return sdk.ActionNext()
 	}
 
-	extractor := Extractor{Payload: payload}
+	extractor := Extractor{Payload: payload, IsResp: false}
 	attrs, trace, err := extractor.do()
 	if err != nil {
 		return sdk.ActionNext()
@@ -243,7 +248,7 @@ func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
 		return sdk.ActionAbortWithErr(err)
 	}
 
-	extractor := Extractor{Payload: payload}
+	extractor := Extractor{Payload: payload, IsResp: true}
 	attrs, trace, err := extractor.do()
 	if err != nil {
 		return sdk.ActionNext()
