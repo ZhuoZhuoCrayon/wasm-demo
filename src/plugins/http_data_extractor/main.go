@@ -3,17 +3,21 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
+	"github.com/ZhuoZhuoCrayon/wasm-demo/src/plugins/utils/common"
+	uhttp "github.com/ZhuoZhuoCrayon/wasm-demo/src/plugins/utils/http"
 	"github.com/deepflowio/deepflow-wasm-go-sdk/sdk"
-	"github.com/valyala/fastjson"
+	// 将 nottinygc 作为 TinyGo 编译 WASI 的一个替代内存分配器，默认的内存分配器在数据量大的场景会有性能问题
 	_ "github.com/wasilibs/nottinygc"
-	"io"
 	"net/http"
-	"strconv"
-	"strings"
 )
 
 const (
 	HTTP1 uint8 = 20
+)
+
+var (
+	ExtractError = errors.New("failed to extract data")
 )
 
 var httpPathPrefixes = []string{
@@ -25,48 +29,19 @@ var expectDataFields = map[string]bool{
 	"openid": true,
 	// "err_code": true,
 	// "ret":      true,
-	// "userId":   true,
-	// "orderId":  true,
+	// "userId":  true,
+	// "orderId": true,
 }
 
-func isPathMatched(path string, prefixes []string) bool {
-	// sdk.Info("[isPathMatched] path -> %s", path)
-	for _, prefix := range prefixes {
-		if strings.HasPrefix(path, prefix) {
-			sdk.Info("[isPathMatched] path -> %s, matched -> %s", path, prefix)
-			return true
-		}
+func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Trace, error) {
+	if kv == nil || len(kv) == 0 {
+		return nil, nil, ExtractError
 	}
-	return false
-}
-
-func extract(b io.ReadCloser, fields map[string]bool) ([]sdk.KeyVal, *sdk.Trace, error) {
-	body, err := io.ReadAll(b)
-	if err != nil || len(body) == 0 {
-		return nil, nil, err
+	sdk.Info("[formatKv] extract kv -> %v", kv)
+	attrs := make([]sdk.KeyVal, 0, len(kv))
+	for k, v := range kv {
+		attrs = append(attrs, sdk.KeyVal{Key: k, Val: v})
 	}
-	// sdk.Info("[extract] body -> %#v", body)
-	fv, err := fastjson.ParseBytes(body)
-	if err != nil {
-		return nil, nil, err
-	}
-	attrs := make([]sdk.KeyVal, 0, len(fields))
-	for field := range fields {
-		if !fv.Exists(field) {
-			continue
-		}
-		v := ""
-		switch fv.Get(field).Type() {
-		case fastjson.TypeString:
-			v = string(fv.GetStringBytes(field))
-		case fastjson.TypeNumber:
-			v = strconv.Itoa(fv.GetInt(field))
-		}
-		if v != "" {
-			attrs = append(attrs, sdk.KeyVal{Key: field, Val: string(v)})
-		}
-	}
-	sdk.Info("[extract] attrs -> %v", attrs)
 	return attrs, nil, nil
 }
 
@@ -82,9 +57,10 @@ func (p httpHook) HookIn() []sdk.HookBitmap {
 
 func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 	baseCtx := &ctx.BaseCtx
-	if baseCtx.L7 != HTTP1 || !isPathMatched(ctx.Path, httpPathPrefixes) {
+	if baseCtx.L7 != HTTP1 || !common.IsPrefixMatched(ctx.Path, httpPathPrefixes) {
 		return sdk.ActionNext()
 	}
+	// sdk.Info("[OnHttpReq] path -> %v", ctx.Path)
 	payload, err := baseCtx.GetPayload()
 	if err != nil {
 		return sdk.ActionAbortWithErr(err)
@@ -94,7 +70,13 @@ func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 	if err != nil {
 		return sdk.ActionNext()
 	}
-	attrs, trace, err := extract(req.Body, expectDataFields)
+	contentType := req.Header.Get("Content-Type")
+	// sdk.Info("[OnHttpReq] header -> %v, Content-Type -> %v", req.Header, contentType)
+	kv, err := uhttp.Extract(req.Body, contentType, expectDataFields)
+	if err != nil {
+		return sdk.ActionNext()
+	}
+	attrs, trace, err := formatKv(kv)
 	if err != nil {
 		return sdk.ActionNext()
 	}
@@ -102,26 +84,8 @@ func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 }
 
 func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
-	return sdk.ActionNext()
 	// TODO(crayon) Response 计算量太大，暂不开启
-	//baseCtx := &ctx.BaseCtx
-	//if baseCtx.L7 != HTTP1 {
-	//	return sdk.ActionNext()
-	//}
-	//payload, err := baseCtx.GetPayload()
-	//if err != nil {
-	//	return sdk.ActionAbortWithErr(err)
-	//}
-	//// sdk.Info("[OnHttpResp] payload -> %#v", payload)
-	//resp, err := http.ReadResponse(bufio.NewReader(bytes.NewReader(payload)), nil)
-	//if err != nil {
-	//	return sdk.ActionNext()
-	//}
-	//attrs, trace, err := extract(resp.Body, expectDataFields)
-	//if err != nil {
-	//	return sdk.ActionNext()
-	//}
-	//return sdk.HttpReqActionAbortWithResult(nil, trace, attrs)
+	return sdk.ActionNext()
 }
 
 func (p httpHook) OnCheckPayload(baseCtx *sdk.ParseCtx) (uint8, string) {
