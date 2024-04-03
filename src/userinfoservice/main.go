@@ -76,7 +76,7 @@ func main() {
 	pb.RegisterUserInfoServiceServer(s, &server{})
 
 	// 监听一个端口，例如 9000
-	lis, err := net.Listen("tcp", "localhost:9000")
+	lis, err := net.Listen("tcp", ":9000")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

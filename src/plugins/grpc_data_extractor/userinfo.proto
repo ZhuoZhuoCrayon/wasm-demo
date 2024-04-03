@@ -7,7 +7,6 @@ message PhoneNumber {
   PhoneType type = 2;
 }
 
-
 message GetUserInfoRequest {
   int32 user_id = 1;
 }
