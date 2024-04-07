@@ -15,9 +15,9 @@ const (
 )
 
 func NewContext() (context.Context, context.CancelFunc) {
-	requestId := fmt.Sprintf("req-010-%04d", rand.Intn(1000))
-	log.Printf("[NewContext] requestId -> %s", requestId)
-	md := metadata.New(map[string]string{"request-id": requestId})
+	openid := fmt.Sprintf("req-010-%04d", rand.Intn(1000))
+	log.Printf("[NewContext] openid -> %s", openid)
+	md := metadata.New(map[string]string{"openid": openid})
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	ctx = metadata.NewOutgoingContext(ctx, md)
 	return ctx, cancel
