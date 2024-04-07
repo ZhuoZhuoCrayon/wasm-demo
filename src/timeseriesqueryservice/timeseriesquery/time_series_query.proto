@@ -1,0 +1,39 @@
+syntax = "proto3";
+package timeseriesquery;
+option go_package = "github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/timeseriesquery";
+
+// 查询配置
+message QueryConfig {
+  int32 interval = 1;
+  repeated string group_by = 2;
+  int64 begin_time = 3;
+  int64 end_time = 4;
+}
+
+// 数据点
+message DataPoint {
+  int64 timestamp = 1;
+  double value = 2;
+}
+
+// 序列
+message Series {
+  map<string, string> dimensions = 1;
+  repeated DataPoint data_points = 2;
+}
+
+// 查询请求
+message QueryRequest {
+  QueryConfig query_config = 1;
+}
+
+// 查询响应
+message QueryResponse {
+  repeated Series series = 1;
+}
+
+service TimeSeriesQueryService {
+  rpc ClientStreamQuery(stream QueryRequest) returns (QueryResponse) {}
+  rpc ServerStreamQuery(QueryRequest) returns (stream QueryResponse) {}
+  rpc BidirectionalStreamQuery(stream QueryRequest) returns (stream QueryResponse) {}
+}
