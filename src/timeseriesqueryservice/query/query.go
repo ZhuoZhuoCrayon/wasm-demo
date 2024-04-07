@@ -130,6 +130,8 @@ func (q *Queryer) Run() []*Series {
 		}
 		series[i] = singleSeries
 	}
+	// 模拟数据查询耗时
+	time.Sleep(500 * time.Millisecond)
 	return series
 }
 

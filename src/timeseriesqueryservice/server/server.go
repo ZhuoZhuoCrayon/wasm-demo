@@ -45,6 +45,8 @@ func (s *timeSeriesQueryServer) ClientStreamQuery(stream pb.TimeSeriesQueryServi
 		if err != nil {
 			return err
 		}
+		// 模拟预计算耗时
+		time.Sleep(500 * time.Millisecond)
 		queryConfig = req.QueryConfig
 		log.Printf("[ClientStreamQuery] reciver range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
 		if beginTime > queryConfig.BeginTime {
@@ -102,7 +104,6 @@ func (s *timeSeriesQueryServer) BidirectionalStreamQuery(stream pb.TimeSeriesQue
 		if err := stream.Send(&pb.QueryResponse{Series: toGrpcSeries(series)}); err != nil {
 			return err
 		}
-		time.Sleep(500 * time.Millisecond)
 	}
 }
 
