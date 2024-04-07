@@ -62,6 +62,7 @@ func (s *timeSeriesQueryServer) ServerStreamQuery(req *pb.QueryRequest, stream p
 	if err != nil {
 		return err
 	}
+	// 对客户端请求的时间范围进行分片
 	ti := query.NewTimeRangeIteratorFromSegments(&queryTimeRange, 5)
 	for {
 		tr, end := ti.Next()

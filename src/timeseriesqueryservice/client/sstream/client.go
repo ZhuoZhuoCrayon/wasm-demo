@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	client2 "github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/client"
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/query"
@@ -10,12 +9,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"log"
-	"time"
 )
 
 func runServerStreamQuery(client pb.TimeSeriesQueryServiceClient) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	tr, err := query.NewTimeRangeFromStr("2024-04-02 14:00:00", "2024-04-02 15:00:00")
 	if err != nil {
 		log.Fatalf("[runServerStreamQuery] failed to TimeRange -> %v", err)
@@ -28,6 +24,8 @@ func runServerStreamQuery(client pb.TimeSeriesQueryServiceClient) {
 			Interval:  60,
 		},
 	}
+	ctx, cancel := client2.NewContext()
+	defer cancel()
 	stream, err := client.ServerStreamQuery(ctx, req)
 	for {
 		resp, err := stream.Recv()

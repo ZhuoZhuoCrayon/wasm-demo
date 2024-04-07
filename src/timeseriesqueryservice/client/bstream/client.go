@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	client2 "github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/client"
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/query"
@@ -19,7 +18,7 @@ func runBidirectionalStreamQuery(client pb.TimeSeriesQueryServiceClient) {
 		log.Fatalf("[runBidirectionalStreamQuery] failed to TimeRange -> %v", err)
 	}
 	ti := query.NewTimeRangeIteratorFromSegments(&tr, 10)
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := client2.NewContext()
 	defer cancel()
 	stream, err := client.BidirectionalStreamQuery(ctx)
 	if err != nil {

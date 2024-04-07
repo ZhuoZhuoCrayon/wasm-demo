@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	client2 "github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/client"
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/query"
@@ -9,7 +8,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
-	"time"
 )
 
 func runClientStreamQuery(client pb.TimeSeriesQueryServiceClient) {
@@ -26,7 +24,7 @@ func runClientStreamQuery(client pb.TimeSeriesQueryServiceClient) {
 		}
 		timeRanges[i] = &tr
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := client2.NewContext()
 	defer cancel()
 	stream, err := client.ClientStreamQuery(ctx)
 	if err != nil {
