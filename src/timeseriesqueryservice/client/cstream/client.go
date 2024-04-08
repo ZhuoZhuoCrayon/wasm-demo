@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
+	"math/rand"
 )
 
 func runClientStreamQuery(client pb.TimeSeriesQueryServiceClient) {
@@ -48,7 +49,7 @@ func runClientStreamQuery(client pb.TimeSeriesQueryServiceClient) {
 	if err != nil {
 		log.Fatalf("[runClientStreamQuery] failed to recv: %v", err)
 	}
-	log.Printf("[runClientStreamQuery] resp -> %v", resp)
+	log.Printf("[runClientStreamQuery] Dimensions -> %v", resp.Series[rand.Intn(len(resp.Series))].Dimensions)
 }
 
 func main() {

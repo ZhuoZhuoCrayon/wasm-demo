@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"log"
+	"math/rand"
 	"time"
 )
 
@@ -35,7 +36,7 @@ func runBidirectionalStreamQuery(client pb.TimeSeriesQueryServiceClient) {
 			if err != nil {
 				log.Fatalf("[runBidirectionalStreamQuery] failed to recv: %v", err)
 			}
-			log.Printf("[runBidirectionalStreamQuery] resp -> %v", resp)
+			log.Printf("[runBidirectionalStreamQuery] Dimensions -> %v", resp.Series[rand.Intn(len(resp.Series))].Dimensions)
 		}
 	}()
 	for {
