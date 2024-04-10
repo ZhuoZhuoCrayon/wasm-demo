@@ -44,7 +44,7 @@ func (s *server) GetUserInfo(ctx context.Context, req *pb.GetUserInfoRequest) (*
 	// 响应前发送
 	grpc.SetHeader(ctx, md)
 	// 在响应的 DATA 帧后发送
-	// grpc.SetTrailer(ctx, md)
+	grpc.SetTrailer(ctx, md)
 
 	return &pb.UserInfo{
 		Openid:   openid[0],

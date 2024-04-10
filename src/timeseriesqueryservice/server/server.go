@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/query"
+	"github.com/ZhuoZhuoCrayon/wasm-demo/src/core/query"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/timeseriesquery"
 	"google.golang.org/grpc"
 	"io"

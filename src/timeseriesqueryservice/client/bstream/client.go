@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/ZhuoZhuoCrayon/wasm-demo/src/core/query"
 	client2 "github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/client"
-	"github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/query"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/timeseriesqueryservice/timeseriesquery"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
