@@ -1,0 +1,18 @@
+global:                   # 全局配置
+  namespace: Development  # 环境类型，分正式 Production 和非正式 Development 两种类型
+  env_name: test          # 环境名称，非正式环境下多环境的名称
+
+server:                                    # 服务端配置
+  app: crayon                                # 业务的应用名
+  server: timeseriesquery                       # 进程服务名
+  bin_path: /usr/local/trpc/bin/           # 二进制可执行文件和框架配置文件所在路径
+  conf_path: /usr/local/trpc/conf/         # 业务配置文件所在路径
+  data_path: /usr/local/trpc/data/         # 业务数据文件所在路径
+  service:                                 # 业务服务提供的 service，可以有多个
+    - name: trpc.crayon.timeseriesquery.TimeSeriesQueryService  # service 的名字服务路由名称
+      ip: 127.0.0.1                        # 服务监听 ip 地址
+      port: 9002                           # 服务监听端口
+      # address: 127.0.0.1:8000             # 如果使用则忽略 ip:port，可以用于 unix socket，例如 temp.sock
+      network: tcp                         # 网络监听类型 tcp udp unix
+      protocol: trpc                       # 应用层协议 trpc http
+      timeout: 1000                        # 请求最长处理时间 单位 毫秒
