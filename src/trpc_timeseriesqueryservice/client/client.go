@@ -11,6 +11,7 @@ import (
 
 func NewClientProxy() pb.TimeSeriesQueryServiceClientProxy {
 	openid := fmt.Sprintf("req-010-%04d", rand.Intn(1000))
+	fmt.Printf("[NewContext] openid -> %s \n", openid)
 	log.Printf("[NewContext] openid -> %s", openid)
 	trpc.NewServer()
 	opts := []client.Option{
