@@ -1,7 +1,7 @@
 setup:
 	go install trpc.group/trpc-go/trpc-cmdline/trpc@latest && trpc setup
 pb:
-	trpc create -p timeseriesquery/time_series_query.proto -o timeseriesquery --rpconly --nogomod --mock=false
+	trpc-pub create -p timeseriesquery/time_series_query.proto -o timeseriesquery --rpconly --nogomod --mock=false
 serve:
 	go run server/server.go -conf server/trpc_go.yaml
 
