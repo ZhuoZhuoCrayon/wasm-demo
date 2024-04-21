@@ -140,6 +140,7 @@ func NewQueryer(beginTime, endTime int64, groupBy []string, interval int) (*Quer
 	if err != nil {
 		return nil, err
 	}
+	// return nil, TimeParseError
 	ti := NewTimeRangeIterator(&tr, time.Duration(interval)*time.Second)
 	return &Queryer{groupBy: groupBy, timeRangeIterator: ti}, nil
 }

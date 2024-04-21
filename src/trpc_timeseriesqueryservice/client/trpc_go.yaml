@@ -10,4 +10,4 @@ client:                                            # configuration for client ca
       network: tcp                                 # backend service network type, tcp or udp, configuration takes precedence.
       protocol: trpc                               # application layer protocol, trpc or http.
       timeout: 800                                 # maximum request processing time in milliseconds.
-      target: ip://127.0.0.1:9002
+      target: "ip://127.0.0.1:9002"
