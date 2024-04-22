@@ -122,28 +122,28 @@ func (x *timeSeriesQueryServiceBidirectionalStreamQueryServer) Recv() (*QueryReq
 
 // TimeSeriesQueryServiceServer_ServiceDesc descriptor for server.RegisterService.
 var TimeSeriesQueryServiceServer_ServiceDesc = server.ServiceDesc{
-	ServiceName:  "timeseriesquery.TimeSeriesQueryService",
+	ServiceName:  "trpc.crayon.timeseriesquery.TimeSeriesQueryService",
 	HandlerType:  ((*TimeSeriesQueryServiceService)(nil)),
 	StreamHandle: stream.NewStreamDispatcher(),
 	Methods: []server.Method{
 		{
-			Name: "/timeseriesquery.TimeSeriesQueryService/Query",
+			Name: "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/Query",
 			Func: TimeSeriesQueryServiceService_Query_Handler,
 		},
 	},
 	Streams: []server.StreamDesc{
 		{
-			StreamName:    "/timeseriesquery.TimeSeriesQueryService/ClientStreamQuery",
+			StreamName:    "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ClientStreamQuery",
 			Handler:       TimeSeriesQueryServiceService_ClientStreamQuery_Handler,
 			ServerStreams: false,
 		},
 		{
-			StreamName:    "/timeseriesquery.TimeSeriesQueryService/ServerStreamQuery",
+			StreamName:    "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ServerStreamQuery",
 			Handler:       TimeSeriesQueryServiceService_ServerStreamQuery_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "/timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery",
+			StreamName:    "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery",
 			Handler:       TimeSeriesQueryServiceService_BidirectionalStreamQuery_Handler,
 			ServerStreams: true,
 		},
@@ -204,10 +204,10 @@ var NewTimeSeriesQueryServiceClientProxy = func(opts ...client.Option) TimeSerie
 func (c *TimeSeriesQueryServiceClientProxyImpl) Query(ctx context.Context, req *QueryRequest, opts ...client.Option) (*QueryResponse, error) {
 	ctx, msg := codec.WithCloneMessage(ctx)
 	defer codec.PutBackMessage(msg)
-	msg.WithClientRPCName("/timeseriesquery.TimeSeriesQueryService/Query")
+	msg.WithClientRPCName("/trpc.crayon.timeseriesquery.TimeSeriesQueryService/Query")
 	msg.WithCalleeServiceName(TimeSeriesQueryServiceServer_ServiceDesc.ServiceName)
-	msg.WithCalleeApp("")
-	msg.WithCalleeServer("")
+	msg.WithCalleeApp("crayon")
+	msg.WithCalleeServer("timeseriesquery")
 	msg.WithCalleeService("TimeSeriesQueryService")
 	msg.WithCalleeMethod("Query")
 	msg.WithSerializationType(codec.SerializationTypePB)
@@ -224,16 +224,16 @@ func (c *TimeSeriesQueryServiceClientProxyImpl) Query(ctx context.Context, req *
 func (c *TimeSeriesQueryServiceClientProxyImpl) ClientStreamQuery(ctx context.Context, opts ...client.Option) (TimeSeriesQueryService_ClientStreamQueryClient, error) {
 	ctx, msg := codec.WithCloneMessage(ctx)
 
-	msg.WithClientRPCName("/timeseriesquery.TimeSeriesQueryService/ClientStreamQuery")
+	msg.WithClientRPCName("/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ClientStreamQuery")
 	msg.WithCalleeServiceName(TimeSeriesQueryServiceServer_ServiceDesc.ServiceName)
-	msg.WithCalleeApp("")
-	msg.WithCalleeServer("")
+	msg.WithCalleeApp("crayon")
+	msg.WithCalleeServer("timeseriesquery")
 	msg.WithCalleeService("TimeSeriesQueryService")
 	msg.WithCalleeMethod("ClientStreamQuery")
 	msg.WithSerializationType(codec.SerializationTypePB)
 
 	clientStreamDesc := &client.ClientStreamDesc{}
-	clientStreamDesc.StreamName = "/timeseriesquery.TimeSeriesQueryService/ClientStreamQuery"
+	clientStreamDesc.StreamName = "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ClientStreamQuery"
 	clientStreamDesc.ClientStreams = true
 	clientStreamDesc.ServerStreams = false
 
@@ -241,7 +241,7 @@ func (c *TimeSeriesQueryServiceClientProxyImpl) ClientStreamQuery(ctx context.Co
 	callopts = append(callopts, c.opts...)
 	callopts = append(callopts, opts...)
 
-	stream, err := c.streamClient.NewStream(ctx, clientStreamDesc, "/timeseriesquery.TimeSeriesQueryService/ClientStreamQuery", callopts...)
+	stream, err := c.streamClient.NewStream(ctx, clientStreamDesc, "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ClientStreamQuery", callopts...)
 	if err != nil {
 		return nil, err
 	}
@@ -277,16 +277,16 @@ func (x *timeSeriesQueryServiceClientStreamQueryClient) CloseAndRecv() (*QueryRe
 func (c *TimeSeriesQueryServiceClientProxyImpl) ServerStreamQuery(ctx context.Context, req *QueryRequest, opts ...client.Option) (TimeSeriesQueryService_ServerStreamQueryClient, error) {
 	ctx, msg := codec.WithCloneMessage(ctx)
 
-	msg.WithClientRPCName("/timeseriesquery.TimeSeriesQueryService/ServerStreamQuery")
+	msg.WithClientRPCName("/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ServerStreamQuery")
 	msg.WithCalleeServiceName(TimeSeriesQueryServiceServer_ServiceDesc.ServiceName)
-	msg.WithCalleeApp("")
-	msg.WithCalleeServer("")
+	msg.WithCalleeApp("crayon")
+	msg.WithCalleeServer("timeseriesquery")
 	msg.WithCalleeService("TimeSeriesQueryService")
 	msg.WithCalleeMethod("ServerStreamQuery")
 	msg.WithSerializationType(codec.SerializationTypePB)
 
 	clientStreamDesc := &client.ClientStreamDesc{}
-	clientStreamDesc.StreamName = "/timeseriesquery.TimeSeriesQueryService/ServerStreamQuery"
+	clientStreamDesc.StreamName = "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ServerStreamQuery"
 	clientStreamDesc.ClientStreams = false
 	clientStreamDesc.ServerStreams = true
 
@@ -294,7 +294,7 @@ func (c *TimeSeriesQueryServiceClientProxyImpl) ServerStreamQuery(ctx context.Co
 	callopts = append(callopts, c.opts...)
 	callopts = append(callopts, opts...)
 
-	stream, err := c.streamClient.NewStream(ctx, clientStreamDesc, "/timeseriesquery.TimeSeriesQueryService/ServerStreamQuery", callopts...)
+	stream, err := c.streamClient.NewStream(ctx, clientStreamDesc, "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/ServerStreamQuery", callopts...)
 	if err != nil {
 		return nil, err
 	}
@@ -328,16 +328,16 @@ func (x *timeSeriesQueryServiceServerStreamQueryClient) Recv() (*QueryResponse, 
 func (c *TimeSeriesQueryServiceClientProxyImpl) BidirectionalStreamQuery(ctx context.Context, opts ...client.Option) (TimeSeriesQueryService_BidirectionalStreamQueryClient, error) {
 	ctx, msg := codec.WithCloneMessage(ctx)
 
-	msg.WithClientRPCName("/timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery")
+	msg.WithClientRPCName("/trpc.crayon.timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery")
 	msg.WithCalleeServiceName(TimeSeriesQueryServiceServer_ServiceDesc.ServiceName)
-	msg.WithCalleeApp("")
-	msg.WithCalleeServer("")
+	msg.WithCalleeApp("crayon")
+	msg.WithCalleeServer("timeseriesquery")
 	msg.WithCalleeService("TimeSeriesQueryService")
 	msg.WithCalleeMethod("BidirectionalStreamQuery")
 	msg.WithSerializationType(codec.SerializationTypePB)
 
 	clientStreamDesc := &client.ClientStreamDesc{}
-	clientStreamDesc.StreamName = "/timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery"
+	clientStreamDesc.StreamName = "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery"
 	clientStreamDesc.ClientStreams = true
 	clientStreamDesc.ServerStreams = true
 
@@ -345,7 +345,7 @@ func (c *TimeSeriesQueryServiceClientProxyImpl) BidirectionalStreamQuery(ctx con
 	callopts = append(callopts, c.opts...)
 	callopts = append(callopts, opts...)
 
-	stream, err := c.streamClient.NewStream(ctx, clientStreamDesc, "/timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery", callopts...)
+	stream, err := c.streamClient.NewStream(ctx, clientStreamDesc, "/trpc.crayon.timeseriesquery.TimeSeriesQueryService/BidirectionalStreamQuery", callopts...)
 	if err != nil {
 		return nil, err
 	}

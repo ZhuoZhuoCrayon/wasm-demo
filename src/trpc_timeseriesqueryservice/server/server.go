@@ -5,10 +5,10 @@ import (
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/core/query"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/timeseriesquery"
 	"io"
-	"log"
 	"math"
 	"time"
 	"trpc.group/trpc-go/trpc-go"
+	"trpc.group/trpc-go/trpc-go/log"
 	"trpc.group/trpc-go/trpc-go/server"
 )
 
@@ -46,7 +46,7 @@ func (s *timeSeriesQueryServiceImpl) ClientStreamQuery(stream pb.TimeSeriesQuery
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
-			log.Printf("[ClientStreamQuery] start to send range -> (%v, %v)", beginTime, endTime)
+			log.Errorf("[ClientStreamQuery] start to send range -> (%v, %v)", beginTime, endTime)
 			queryer, err := query.NewQueryer(beginTime, endTime, queryConfig.GroupBy, int(queryConfig.Interval))
 			if err != nil {
 				return err
@@ -60,7 +60,7 @@ func (s *timeSeriesQueryServiceImpl) ClientStreamQuery(stream pb.TimeSeriesQuery
 		// 模拟预计算耗时
 		time.Sleep(500 * time.Millisecond)
 		queryConfig = req.QueryConfig
-		log.Printf("[ClientStreamQuery] reciver range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
+		log.Infof("[ClientStreamQuery] recv range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
 		if beginTime > queryConfig.BeginTime {
 			beginTime = queryConfig.BeginTime
 		}
@@ -83,7 +83,7 @@ func (s *timeSeriesQueryServiceImpl) ServerStreamQuery(req *pb.QueryRequest, str
 		if end {
 			break
 		}
-		log.Printf("[ServerStreamQuery] start to send range -> (%v, %v)", tr.BeginTime, tr.EndTime)
+		log.Infof("[ServerStreamQuery] start to send range -> (%v, %v)", tr.BeginTime, tr.EndTime)
 		queryer, err := query.NewQueryer(tr.BeginTimeToUnix(), tr.EndTimeToUnix(), req.QueryConfig.GroupBy, int(req.QueryConfig.Interval))
 		if err != nil {
 			return err
@@ -107,7 +107,7 @@ func (s *timeSeriesQueryServiceImpl) BidirectionalStreamQuery(stream pb.TimeSeri
 			return err
 		}
 		queryConfig := req.QueryConfig
-		log.Printf("[BidirectionalStreamQuery] start to send range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
+		log.Infof("[BidirectionalStreamQuery] start to send range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
 		queryer, err := query.NewQueryer(queryConfig.BeginTime, queryConfig.EndTime, queryConfig.GroupBy, int(req.QueryConfig.Interval))
 		if err != nil {
 			return err

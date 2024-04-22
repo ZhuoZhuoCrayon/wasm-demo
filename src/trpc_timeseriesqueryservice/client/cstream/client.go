@@ -4,9 +4,9 @@ import (
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/core/query"
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/client"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/timeseriesquery"
-	"log"
 	"math/rand"
 	"trpc.group/trpc-go/trpc-go"
+	"trpc.group/trpc-go/trpc-go/log"
 )
 
 func runClientStreamQuery(proxy pb.TimeSeriesQueryServiceClientProxy) {
@@ -28,7 +28,7 @@ func runClientStreamQuery(proxy pb.TimeSeriesQueryServiceClientProxy) {
 		log.Fatalf("[runClientStreamQuery] failed to get stream: %v", err)
 	}
 	for _, tr := range timeRanges {
-		log.Printf("[runClientStreamQuery] start to query range -> (%v, %v)", tr.BeginTime, tr.EndTime)
+		log.Infof("[runClientStreamQuery] start to query range -> (%v, %v)", tr.BeginTime, tr.EndTime)
 		req := &pb.QueryRequest{
 			QueryConfig: &pb.QueryConfig{
 				BeginTime: tr.BeginTimeToUnix(),
@@ -45,7 +45,7 @@ func runClientStreamQuery(proxy pb.TimeSeriesQueryServiceClientProxy) {
 	if err != nil {
 		log.Fatalf("[runClientStreamQuery] failed to recv: %v", err)
 	}
-	log.Printf("[runClientStreamQuery] Dimensions -> %v", resp.Series[rand.Intn(len(resp.Series))].Dimensions)
+	log.Infof("[runClientStreamQuery] Dimensions -> %v", resp.Series[rand.Intn(len(resp.Series))].Dimensions)
 }
 
 func main() {

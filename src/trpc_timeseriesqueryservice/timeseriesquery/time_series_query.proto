@@ -1,5 +1,5 @@
 syntax = "proto3";
-package timeseriesquery;
+package trpc.crayon.timeseriesquery;
 option go_package = "github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/timeseriesquery";
 
 // 查询配置

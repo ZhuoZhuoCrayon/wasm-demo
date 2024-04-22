@@ -4,9 +4,9 @@ import (
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/core/query"
 	client2 "github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/client"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/timeseriesquery"
-	"log"
 	"math/rand"
 	"trpc.group/trpc-go/trpc-go"
+	"trpc.group/trpc-go/trpc-go/log"
 )
 
 func runQuery(proxy pb.TimeSeriesQueryServiceClientProxy) {
@@ -26,7 +26,7 @@ func runQuery(proxy pb.TimeSeriesQueryServiceClientProxy) {
 	if err != nil {
 		log.Fatalf("[runQuery] failed to Query: %v", err)
 	}
-	log.Printf("[runQuery] Dimensions -> %v", resp.Series[rand.Intn(len(resp.Series))].Dimensions)
+	log.Infof("[runQuery] Dimensions -> %v", resp.Series[rand.Intn(len(resp.Series))].Dimensions)
 }
 
 func main() {
