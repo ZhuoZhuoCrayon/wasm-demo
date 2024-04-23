@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/core/query"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/timeseriesquery"
 	"io"
 	"math"
+	"math/rand"
 	"time"
 	"trpc.group/trpc-go/trpc-go"
 	"trpc.group/trpc-go/trpc-go/log"
@@ -27,11 +29,23 @@ type timeSeriesQueryServiceImpl struct {
 	pb.UnimplementedTimeSeriesQueryService
 }
 
+func randErr(errRate float64) error {
+	if rand.Float64() < errRate {
+		// 根据最佳实践，选择 > 10000 的错误码
+		// return errs.New(10001, "random error")
+		return errors.New("123")
+	}
+	return nil
+}
+
 // Query 一应一答模式
 func (s *timeSeriesQueryServiceImpl) Query(ctx context.Context, req *pb.QueryRequest) (*pb.QueryResponse, error) {
 	queryConfig := req.GetQueryConfig()
 	queryer, err := query.NewQueryer(queryConfig.BeginTime, queryConfig.EndTime, queryConfig.GroupBy, int(queryConfig.Interval))
 	if err != nil {
+		return nil, err
+	}
+	if err = randErr(0.05); err != nil {
 		return nil, err
 	}
 	series := queryer.Run()
@@ -46,9 +60,12 @@ func (s *timeSeriesQueryServiceImpl) ClientStreamQuery(stream pb.TimeSeriesQuery
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("[ClientStreamQuery] start to send range -> (%v, %v)", beginTime, endTime)
+			log.Infof("[ClientStreamQuery] start to send range -> (%v, %v)", beginTime, endTime)
 			queryer, err := query.NewQueryer(beginTime, endTime, queryConfig.GroupBy, int(queryConfig.Interval))
 			if err != nil {
+				return err
+			}
+			if err = randErr(0.01); err != nil {
 				return err
 			}
 			series := queryer.Run()
@@ -88,6 +105,9 @@ func (s *timeSeriesQueryServiceImpl) ServerStreamQuery(req *pb.QueryRequest, str
 		if err != nil {
 			return err
 		}
+		if err = randErr(0.01); err != nil {
+			return err
+		}
 		series := queryer.Run()
 		if err := stream.Send(&pb.QueryResponse{Series: toPbSeries(series)}); err != nil {
 			return err
@@ -110,6 +130,9 @@ func (s *timeSeriesQueryServiceImpl) BidirectionalStreamQuery(stream pb.TimeSeri
 		log.Infof("[BidirectionalStreamQuery] start to send range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
 		queryer, err := query.NewQueryer(queryConfig.BeginTime, queryConfig.EndTime, queryConfig.GroupBy, int(req.QueryConfig.Interval))
 		if err != nil {
+			return err
+		}
+		if err = randErr(0.01); err != nil {
 			return err
 		}
 		series := queryer.Run()
