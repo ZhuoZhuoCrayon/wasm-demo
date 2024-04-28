@@ -86,6 +86,7 @@ func newHttp2HookCtx(isResp bool) *http2HookCtx {
 }
 
 type httpHook struct {
+	sdk.DefaultParser
 }
 
 func (p httpHook) HookIn() []sdk.HookBitmap {

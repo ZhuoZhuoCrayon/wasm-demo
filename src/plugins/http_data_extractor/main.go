@@ -47,6 +47,7 @@ func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Trace, error) {
 }
 
 type httpHook struct {
+	sdk.DefaultParser
 }
 
 func (p httpHook) HookIn() []sdk.HookBitmap {

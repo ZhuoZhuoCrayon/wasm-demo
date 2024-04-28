@@ -39,6 +39,11 @@ var ExpectedDataFields = map[string]bool{
 	"UserId": true,
 }
 
+var FieldMap = map[string]string{
+	"Openid": "openid",
+	"UserId": "userId",
+}
+
 func checkAndAddFieldsToMap(s interface{}, fields map[string]bool, kv map[string]string) {
 	v := reflect.ValueOf(s).Elem()
 	for field := range fields {
@@ -61,7 +66,11 @@ func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Trace, error) {
 	sdk.Info("[formatKv] extract kv -> %v", kv)
 	attrs := make([]sdk.KeyVal, 0, len(kv))
 	for k, v := range kv {
-		attrs = append(attrs, sdk.KeyVal{Key: k, Val: v})
+		field, isOk := FieldMap[k]
+		if !isOk {
+			field = k
+		}
+		attrs = append(attrs, sdk.KeyVal{Key: field, Val: v})
 	}
 	trace := &sdk.Trace{}
 	return attrs, trace, nil
@@ -99,6 +108,7 @@ func (h *http2HookCtx) onData(fh http2.FrameHeader, bf []byte) (err error) {
 }
 
 type httpHook struct {
+	sdk.DefaultParser
 }
 
 func (p httpHook) HookIn() []sdk.HookBitmap {
