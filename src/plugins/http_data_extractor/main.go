@@ -22,14 +22,14 @@ var (
 
 var httpPathPrefixes = []string{
 	"/v3/r/mpay",
-	// "/api/checkout",
+	"/api/checkout",
 }
 
 var expectDataFields = map[string]bool{
 	"openid": true,
 	// "err_code": true,
 	// "ret":      true,
-	// "userId":  true,
+	"userId": true,
 	// "orderId": true,
 }
 
@@ -42,7 +42,8 @@ func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Trace, error) {
 	for k, v := range kv {
 		attrs = append(attrs, sdk.KeyVal{Key: k, Val: v})
 	}
-	return attrs, nil, nil
+	trace := &sdk.Trace{}
+	return attrs, trace, nil
 }
 
 type httpHook struct {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/core/query"
 	pb "github.com/ZhuoZhuoCrayon/wasm-demo/src/trpc_timeseriesqueryservice/timeseriesquery"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"math/rand"
 	"time"
 	"trpc.group/trpc-go/trpc-go"
+	"trpc.group/trpc-go/trpc-go/errs"
 	"trpc.group/trpc-go/trpc-go/log"
 	"trpc.group/trpc-go/trpc-go/server"
 )
@@ -32,8 +32,8 @@ type timeSeriesQueryServiceImpl struct {
 func randErr(errRate float64) error {
 	if rand.Float64() < errRate {
 		// 根据最佳实践，选择 > 10000 的错误码
-		// return errs.New(10001, "random error")
-		return errors.New("123")
+		return errs.New(10001, "random error")
+		// return errors.New("123")
 	}
 	return nil
 }
@@ -42,10 +42,11 @@ func randErr(errRate float64) error {
 func (s *timeSeriesQueryServiceImpl) Query(ctx context.Context, req *pb.QueryRequest) (*pb.QueryResponse, error) {
 	queryConfig := req.GetQueryConfig()
 	queryer, err := query.NewQueryer(queryConfig.BeginTime, queryConfig.EndTime, queryConfig.GroupBy, int(queryConfig.Interval))
+	log.Infof("[Query] recv range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
 	if err != nil {
 		return nil, err
 	}
-	if err = randErr(0.05); err != nil {
+	if err = randErr(0.01); err != nil {
 		return nil, err
 	}
 	series := queryer.Run()

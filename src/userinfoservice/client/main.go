@@ -20,7 +20,7 @@ func main() {
 
 	// 创建一个 UserInfoService 客户端
 	client := pb.NewUserInfoServiceClient(conn)
-	for i := 1; i < 4; i++ {
+	for i := 1; i < 2; i++ {
 		// 构造一个 GetUserRequest
 		request := &pb.GetUserInfoRequest{
 			UserId: int32(i),
