@@ -38,4 +38,4 @@ clean:
 	rm -rf $(TARGET)
 
 apply:
-	kubectl apply -f simpleserver.yaml -n default
+	kubectl apply -f hellogo.yaml -n default

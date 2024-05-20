@@ -39,7 +39,7 @@ func randErr(errRate float64) error {
 }
 
 func randSleep() {
-	r := 100 + rand.Intn(200)
+	r := 50 + rand.Intn(180)
 	time.Sleep(time.Duration(r) * time.Millisecond)
 }
 

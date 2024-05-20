@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: timeseriesquery
-          image: mirrors.tencent.com/crayon/timeseriesquery:1.0.5
+          image: mirrors.tencent.com/crayon/timeseriesquery:1.0.6
           imagePullPolicy: Always
           args:
             - ./timeseriesquery

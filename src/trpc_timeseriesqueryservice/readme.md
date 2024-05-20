@@ -12,6 +12,6 @@ make pb
 ### Apply
 
 ```shell
-make img
+make docker-image
 make apply
 ```
