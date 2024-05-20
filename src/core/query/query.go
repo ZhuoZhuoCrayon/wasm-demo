@@ -15,6 +15,11 @@ var (
 	InvalidTimeRangeError = errors.New("invalid time range")
 )
 
+func randSleep() {
+	r := 100 + rand.Intn(200)
+	time.Sleep(time.Duration(r) * time.Millisecond)
+}
+
 type DataPoint struct {
 	Value     float64
 	TimeStamp int64
@@ -131,7 +136,7 @@ func (q *Queryer) Run() []*Series {
 		series[i] = singleSeries
 	}
 	// 模拟数据查询耗时
-	time.Sleep(500 * time.Millisecond)
+	randSleep()
 	return series
 }
 

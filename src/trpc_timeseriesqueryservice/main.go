@@ -7,7 +7,6 @@ import (
 	"io"
 	"math"
 	"math/rand"
-	"time"
 	"trpc.group/trpc-go/trpc-go"
 	"trpc.group/trpc-go/trpc-go/errs"
 	"trpc.group/trpc-go/trpc-go/log"
@@ -36,11 +35,6 @@ func randErr(errRate float64) error {
 		// return errors.New("123")
 	}
 	return nil
-}
-
-func randSleep() {
-	r := 50 + rand.Intn(180)
-	time.Sleep(time.Duration(r) * time.Millisecond)
 }
 
 // Query 一应一答模式
@@ -80,8 +74,6 @@ func (s *timeSeriesQueryServiceImpl) ClientStreamQuery(stream pb.TimeSeriesQuery
 		if err != nil {
 			return err
 		}
-		// 模拟预计算耗时
-		randSleep()
 		queryConfig = req.QueryConfig
 		log.Infof("[ClientStreamQuery] recv range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
 		if beginTime > queryConfig.BeginTime {
