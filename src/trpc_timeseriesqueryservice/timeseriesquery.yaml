@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    opentelemetry.io/name: "timeseriesquery"
+  name: timeseriesquery
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      opentelemetry.io/name: "timeseriesquery"
+  template:
+    metadata:
+      labels:
+        opentelemetry.io/name: "timeseriesquery"
+    spec:
+      containers:
+        - name: timeseriesquery
+          image: mirrors.tencent.com/crayon/timeseriesquery:1.0.5
+          imagePullPolicy: Always
+          args:
+            - ./timeseriesquery
+            - -conf=./conf/trpc_go.yaml
+          ports:
+            - containerPort: 9002
+              name: tsquery-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    opentelemetry.io/name: "timeseriesquery"
+  name: timeseriesquery-service
+spec:
+  selector:
+    opentelemetry.io/name: "timeseriesquery"
+  ports:
+    - protocol: TCP
+      port: 9002
+      targetPort: tsquery-port
+  type: ClusterIP

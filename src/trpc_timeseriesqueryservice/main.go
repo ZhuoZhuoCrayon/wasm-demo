@@ -38,6 +38,11 @@ func randErr(errRate float64) error {
 	return nil
 }
 
+func randSleep() {
+	r := 100 + rand.Intn(200)
+	time.Sleep(time.Duration(r) * time.Millisecond)
+}
+
 // Query 一应一答模式
 func (s *timeSeriesQueryServiceImpl) Query(ctx context.Context, req *pb.QueryRequest) (*pb.QueryResponse, error) {
 	queryConfig := req.GetQueryConfig()
@@ -76,7 +81,7 @@ func (s *timeSeriesQueryServiceImpl) ClientStreamQuery(stream pb.TimeSeriesQuery
 			return err
 		}
 		// 模拟预计算耗时
-		time.Sleep(500 * time.Millisecond)
+		randSleep()
 		queryConfig = req.QueryConfig
 		log.Infof("[ClientStreamQuery] recv range -> (%v, %v)", queryConfig.BeginTime, queryConfig.EndTime)
 		if beginTime > queryConfig.BeginTime {

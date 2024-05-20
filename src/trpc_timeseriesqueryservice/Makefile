@@ -5,7 +5,7 @@ USER := $(shell git config user.name) # 部署用户名
 USERNAME ?=
 PASSWORD ?=
 IMAGE_URL ?= mirrors.tencent.com/crayon/timeseriesquery
-IMAGE_VERSION ?= 1.0.4
+IMAGE_VERSION ?= 1.0.5
 
 setup:
 	go install trpc.group/trpc-go/trpc-cmdline/trpc@latest && trpc setup
@@ -50,3 +50,6 @@ docker-image:
 	docker tag $(SERVICE):latest $(IMAGE_URL):$(IMAGE_VERSION)
 	@echo "push image to remote"
 	docker push $(IMAGE_URL):$(IMAGE_VERSION)
+
+apply:
+	kubectl apply timeseriesquery.yaml -n default

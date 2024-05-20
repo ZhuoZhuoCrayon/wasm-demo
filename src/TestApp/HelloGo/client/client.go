@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	NodeIp       string = "localhost"
+	NodeIp       string = "hellogo-service"
 	RegistryPort int    = 30890
 	ServerPort   int    = 30001
 )
@@ -21,7 +21,7 @@ func main() {
 	app := new(TestApp.SayHello)
 	comm.StringToProxy(obj, app)
 	var out, i int32
-	i = 124
+	i = 128888
 	ret, err := app.Add(i, i*2, &out)
 	if err != nil {
 		fmt.Println(err)

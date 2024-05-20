@@ -5,8 +5,8 @@ GOBUILD      := go build
 DOCKER_BUILD := docker build
 
 REPO         ?= mirrors.tencent.com/crayon
-# VERSION  ?= $(shell date "+%Y%m%d%H%M%S")
-VERSION  ?= mac
+VERSION  ?= $(shell date "+%Y%m%d%H%M%S")
+# VERSION  ?= mac
 
 LOWCASE_TARGET := $(shell echo $(TARGET) | tr '[:upper:]' '[:lower:]')
 IMG_REPO       := $(REPO)/$(LOWCASE_TARGET)
@@ -17,6 +17,7 @@ build:
 img: build
 	$(DOCKER_BUILD) --build-arg SERVER=$(TARGET) -t $(IMG_REPO):$(VERSION) .
 	docker push $(IMG_REPO):$(VERSION)
+	sed -i "s/latest/$(VERSION)/g" simpleserver.yaml
 
 tgz: build
 	tar czf $(TARGET).tgz $(TARGET) _server_meta.yaml
@@ -35,3 +36,6 @@ tailog:
 
 clean:
 	rm -rf $(TARGET)
+
+apply:
+	kubectl apply -f simpleserver.yaml -n default
