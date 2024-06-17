@@ -27,6 +27,11 @@ func randError(errRate float64) (int32, error) {
 
 // SayHelloImp servant implementation
 type SayHelloImp struct {
+	properties *Properties
+}
+
+func NewSayHelloImp(properties *Properties) *SayHelloImp {
+	return &SayHelloImp{properties: properties}
 }
 
 // Init servant init
@@ -39,14 +44,18 @@ func (imp *SayHelloImp) Destroy() {
 }
 
 func (imp *SayHelloImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
+	imp.properties.addRequests.Report(1)
 	randSleep()
 	*c = a + b
-	log.Printf("a(%v) + b(%v) = c(%v)", a, b, c)
+	imp.properties.add.Report(int(*c))
+	log.Printf("a(%v) + b(%v) = c(%v)", a, b, *c)
 	return randError(0.01)
 }
 func (imp *SayHelloImp) Sub(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
+	imp.properties.subRequests.Report(1)
 	randSleep()
 	*c = a - b
-	log.Printf("a(%v) - b(%v) = c(%v)", a, b, c)
+	imp.properties.sub.Report(int(*c))
+	log.Printf("a(%v) - b(%v) = c(%v)", a, b, *c)
 	return randError(0.01)
 }

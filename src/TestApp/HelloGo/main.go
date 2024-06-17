@@ -10,9 +10,10 @@ import (
 func main() {
 	// Get server config
 	cfg := tars.GetServerConfig()
-
+	// New properties
+	p := NewProperties()
 	// New servant imp
-	imp := new(SayHelloImp)
+	imp := NewSayHelloImp(p)
 	err := imp.Init()
 	if err != nil {
 		fmt.Printf("SayHelloImp init fail, err:(%s)\n", err)

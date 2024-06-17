@@ -7,9 +7,11 @@ import (
 )
 
 const (
-	NodeIp       string = "hellogo-service"
+	// NodeIp       string = "hellogo-service"
+	NodeIp       string = "127.0.0.1"
 	RegistryPort int    = 30890
-	ServerPort   int    = 30001
+	// ServerPort   int    = 30001
+	ServerPort int = 10015
 )
 
 func main() {
