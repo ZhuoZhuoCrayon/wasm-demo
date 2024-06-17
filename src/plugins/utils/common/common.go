@@ -14,6 +14,15 @@ func IsPrefixMatched(path string, prefixes []string) bool {
 	return false
 }
 
+func IsPortMatched(port uint16, candidatePorts []uint16) bool {
+	for _, p := range candidatePorts {
+		if p == port {
+			return true
+		}
+	}
+	return false
+}
+
 //func FormatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Trace, error) {
 //	if kv == nil || len(kv) == 0 {
 //		return nil, nil, FormatKvError
