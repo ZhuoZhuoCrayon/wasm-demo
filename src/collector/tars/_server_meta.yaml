@@ -1,0 +1,6 @@
+version: v1
+application: collector
+server: tars
+adapters:
+  - object: StatObj
+  - object: PropertyObj
