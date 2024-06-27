@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"log"
 	"math/rand"
 	"time"
@@ -44,6 +45,10 @@ func (imp *SayHelloImp) Destroy() {
 }
 
 func (imp *SayHelloImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
+	rctx, ok := current.GetRequestContext(ctx)
+	if ok {
+		log.Printf("[Add] rctx -> %v", rctx)
+	}
 	imp.properties.addRequests.Report(1)
 	randSleep()
 	*c = a + b

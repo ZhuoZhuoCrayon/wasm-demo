@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/TarsCloud/TarsGo/tars"
 	"github.com/ZhuoZhuoCrayon/wasm-demo/src/TestApp/HelloGo/TestApp"
@@ -24,7 +25,11 @@ func main() {
 	comm.StringToProxy(obj, app)
 	var out, i int32
 	i = 128888
-	ret, err := app.Add(i, i*2, &out)
+
+	ctx := context.Background()
+	c := make(map[string]string)
+	c["a"] = "b"
+	ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -1,3 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sub-config
+data:
+  sub_config.conf: |
+    <tars>
+        <application>
+            <client>
+                stat=collector.tarsstat.StatObj@tcp -h xxx -p 4319
+                property=collector.tarsproperty.PropertyObj@tcp -h xxx -p 4319
+                modulename=X-BK-TOKEN:xxxx:TestApp.HelloGo
+            </client>
+        </application>
+    </tars>
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,7 +46,18 @@ spec:
           preStop:
             exec:
               command: ["tarscli", "prestop"]
+        volumeMounts:
+          - name: config-volume
+            mountPath: /tars/conf/sub_config.conf
+            subPath: sub_config.conf
+        env:
+          - name: TARS_MERGE_CONF
+            value: "/tars/conf/sub_config.conf"
       terminationGracePeriodSeconds: 90
+      volumes:
+        - name: config-volume
+          configMap:
+            name: sub-config
 ---
 apiVersion: v1
 kind: Service
