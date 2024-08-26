@@ -39,3 +39,7 @@ clean:
 
 apply:
 	kubectl apply -f hellogo.yaml -n default
+
+serve:
+	 go build -o HelloGo
+	 ./HelloGo --config=config/config.conf
