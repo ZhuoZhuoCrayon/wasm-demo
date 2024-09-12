@@ -52,7 +52,7 @@ func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Response, error) {
 	if kv == nil || len(kv) == 0 {
 		return nil, nil, ExtractError
 	}
-	sdk.Info("[formatKv] extract kv -> %v", kv)
+	sdk.Warn("[formatKv] extract kv -> %v", kv)
 	attrs := make([]sdk.KeyVal, 0, len(kv))
 	for k, v := range kv {
 		attrs = append(attrs, sdk.KeyVal{Key: k, Val: v})
@@ -175,7 +175,7 @@ func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
 		return sdk.ActionNext()
 	}
 
-	return sdk.HttpRespActionAbortWithResult(sdkResp, nil, attrs)
+	return sdk.HttpRespActionAbortWithResult(sdkResp, &sdk.Trace{}, attrs)
 }
 
 func (p httpHook) OnCheckPayload(baseCtx *sdk.ParseCtx) (uint8, string) {
