@@ -55,13 +55,13 @@ func HandleFormUrlencoded(body []byte, fields map[string]bool) (kv map[string]st
 	return kv, nil
 }
 
-func ExtractIncompleteJSON(body []byte, fieldPatterns map[string]*regexp.Regexp) (kv map[string]string, err error) {
+func ExtractIncompleteJSON(body []byte, fieldPatterns map[string]string) (kv map[string]string, err error) {
 	bodyStr := string(body)
 	kv = make(map[string]string, len(fieldPatterns)+1)
 	kv["source"] = "IncompleteJSON"
 
 	for field := range fieldPatterns {
-		reg, _ := fieldPatterns[field]
+		reg := regexp.MustCompile(fieldPatterns[field])
 		match := reg.FindStringSubmatch(bodyStr)
 		if len(match) > 1 {
 			kv[field] = match[1]

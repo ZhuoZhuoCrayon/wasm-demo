@@ -9,12 +9,8 @@ import (
 	uhttp "github.com/ZhuoZhuoCrayon/wasm-demo/src/plugins/utils/http"
 	"github.com/deepflowio/deepflow-wasm-go-sdk/sdk"
 	"io"
-	"regexp"
-	"strconv"
-
-	// 将 nottinygc 作为 TinyGo 编译 WASI 的一个替代内存分配器，默认的内存分配器在数据量大的场景会有性能问题
-	_ "github.com/wasilibs/nottinygc"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -32,11 +28,11 @@ var expectDataFields = map[string]bool{
 	"code_name": true,
 }
 
-var expectFieldPatterns = map[string]*regexp.Regexp{
-	"code":      regexp.MustCompile(`"code":\s*(\d+)`),
-	"result":    regexp.MustCompile(`"result":\s*([a-zA-Z]+)`),
-	"message":   regexp.MustCompile(`"message":\s*"([^"]+)"`),
-	"code_name": regexp.MustCompile(`"code_name":\s*"([^"]+)"`),
+var expectFieldPatterns = map[string]string{
+	"code":      `,"code":\s*(\d+)`,
+	"result":    `"result":\s*([a-zA-Z]+)`,
+	"message":   `"message":\s*"([^"]+)"`,
+	"code_name": `"code_name":\s*"([^"]+)"`,
 }
 
 func getOrDefault(kv map[string]string, field string, defaultValue string) string {
@@ -114,6 +110,8 @@ func (p httpHook) OnHttpReq(ctx *sdk.HttpReqCtx) sdk.Action {
 }
 
 func extraBodyFromResp(resp *http.Response) (body []byte, err error) {
+	defer resp.Body.Close()
+
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
 		g, err := gzip.NewReader(resp.Body)
@@ -122,14 +120,19 @@ func extraBodyFromResp(resp *http.Response) (body []byte, err error) {
 		}
 
 		defer g.Close()
+
 		body, err = io.ReadAll(g)
+		if err != nil {
+			return nil, err
+		}
+
 	default:
 		body, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	return body, nil
 }
 

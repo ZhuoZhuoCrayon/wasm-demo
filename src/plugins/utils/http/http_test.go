@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"net/http"
 	"reflect"
-	"regexp"
 	"testing"
 )
 
@@ -106,17 +105,17 @@ func TestExtractIncompleteJSON(t *testing.T) {
 	tests := []struct {
 		name          string
 		payload       []byte
-		fieldPatterns map[string]*regexp.Regexp
+		fieldPatterns map[string]string
 		want          map[string]string
 	}{
 		{
 			name:    "application/json; charset=utf-8",
 			payload: []byte(`{"code": 500, "message": "Server Error", "result": false, "code_name":"ERROR"`),
-			fieldPatterns: map[string]*regexp.Regexp{
-				"code":      regexp.MustCompile(`"code":\s*(\d+)`),
-				"result":    regexp.MustCompile(`"result":\s*([a-zA-Z]+)`),
-				"message":   regexp.MustCompile(`"message":\s*"([^"]+)"`),
-				"code_name": regexp.MustCompile(`"code_name":\s*"([^"]+)"`),
+			fieldPatterns: map[string]string{
+				"code":      `"code":\s*(\d+)`,
+				"result":    `"result":\s*([a-zA-Z]+)`,
+				"message":   `"message":\s*"([^"]+)"`,
+				"code_name": `"code_name":\s*"([^"]+)"`,
 			},
 			want: map[string]string{
 				"code": "500", "message": "Server Error", "result": "false", "code_name": "ERROR", "source": "IncompleteJSON",
