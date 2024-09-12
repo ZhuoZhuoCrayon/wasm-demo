@@ -4,6 +4,7 @@ import (
 	"github.com/valyala/fastjson"
 	"io"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -54,12 +55,23 @@ func HandleFormUrlencoded(body []byte, fields map[string]bool) (kv map[string]st
 	return kv, nil
 }
 
-// Extract HTTP body 解析
-func Extract(b io.ReadCloser, contentType string, fields map[string]bool) (kv map[string]string, err error) {
-	body, err := io.ReadAll(b)
-	if err != nil || len(body) == 0 {
-		return nil, err
+func ExtractIncompleteJSON(body []byte, fieldPatterns map[string]*regexp.Regexp) (kv map[string]string, err error) {
+	bodyStr := string(body)
+	kv = make(map[string]string, len(fieldPatterns)+1)
+	kv["source"] = "IncompleteJSON"
+
+	for field := range fieldPatterns {
+		reg, _ := fieldPatterns[field]
+		match := reg.FindStringSubmatch(bodyStr)
+		if len(match) > 1 {
+			kv[field] = match[1]
+		}
 	}
+
+	return kv, nil
+}
+
+func ExtractBytes(body []byte, contentType string, fields map[string]bool) (kv map[string]string, err error) {
 	if strings.HasPrefix(contentType, JSON) {
 		if kv, err = HandleJSON(body, fields); err != nil {
 			return nil, err
@@ -70,4 +82,13 @@ func Extract(b io.ReadCloser, contentType string, fields map[string]bool) (kv ma
 		}
 	}
 	return kv, nil
+}
+
+// Extract HTTP body 解析
+func Extract(b io.ReadCloser, contentType string, fields map[string]bool) (kv map[string]string, err error) {
+	body, err := io.ReadAll(b)
+	if err != nil || len(body) == 0 {
+		return nil, err
+	}
+	return ExtractBytes(body, contentType, fields)
 }

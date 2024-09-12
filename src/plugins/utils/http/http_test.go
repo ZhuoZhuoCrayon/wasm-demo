@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"net/http"
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -95,6 +96,36 @@ offer_id=123&action=buyGiftPackage&openid=1234`),
 			t.Errorf("failed to read request: err -> %v \n", err)
 		}
 		kv, _ := Extract(req.Body, req.Header.Get("Content-Type"), tt.fields)
+		if !reflect.DeepEqual(kv, tt.want) {
+			t.Errorf("kv want %v but got %v", tt.want, kv)
+		}
+	}
+}
+
+func TestExtractIncompleteJSON(t *testing.T) {
+	tests := []struct {
+		name          string
+		payload       []byte
+		fieldPatterns map[string]*regexp.Regexp
+		want          map[string]string
+	}{
+		{
+			name:    "application/json; charset=utf-8",
+			payload: []byte(`{"code": 500, "message": "Server Error", "result": false, "code_name":"ERROR"`),
+			fieldPatterns: map[string]*regexp.Regexp{
+				"code":      regexp.MustCompile(`"code":\s*(\d+)`),
+				"result":    regexp.MustCompile(`"result":\s*([a-zA-Z]+)`),
+				"message":   regexp.MustCompile(`"message":\s*"([^"]+)"`),
+				"code_name": regexp.MustCompile(`"code_name":\s*"([^"]+)"`),
+			},
+			want: map[string]string{
+				"code": "500", "message": "Server Error", "result": "false", "code_name": "ERROR", "source": "IncompleteJSON",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		kv, _ := ExtractIncompleteJSON(tt.payload, tt.fieldPatterns)
 		if !reflect.DeepEqual(kv, tt.want) {
 			t.Errorf("kv want %v but got %v", tt.want, kv)
 		}
