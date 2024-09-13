@@ -142,7 +142,7 @@ func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
 		return sdk.ActionNext()
 	}
 
-	if baseCtx.BufSize < 10 {
+	if baseCtx.BufSize < 19 {
 		return sdk.ActionNext()
 	}
 
@@ -151,15 +151,21 @@ func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
 		return sdk.ActionNext()
 	}
 
-	resp, err := http.ReadResponse(bufio.NewReader(bytes.NewReader(payload)), nil)
+	sdk.Warn("[payload] %v", payload)
+
+	resp, err := http.ReadResponse(bufio.NewReader(bytes.NewReader(payload)), &http.Request{})
 	if err != nil {
 		return sdk.ActionNext()
 	}
+
+	sdk.Warn("[header] %v", resp.Header)
 
 	body, err := extraBodyFromResp(resp)
 	if err != nil {
 		return sdk.ActionNext()
 	}
+
+	sdk.Warn("[body] %v", string(body))
 
 	kv, err := uhttp.ExtractBytes(body, uhttp.JSON, expectDataFields)
 	if err != nil {
