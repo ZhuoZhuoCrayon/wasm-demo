@@ -112,13 +112,26 @@ func TestExtractIncompleteJSON(t *testing.T) {
 			name:    "application/json; charset=utf-8",
 			payload: []byte(`{"code": 500, "message": "Server Error", "result": false, "code_name":"ERROR"`),
 			fieldPatterns: map[string]string{
-				"code":      `"code":\s*(\d+)`,
+				"code":      `"code":\s*"?(\d+)"?`,
 				"result":    `"result":\s*([a-zA-Z]+)`,
 				"message":   `"message":\s*"([^"]+)"`,
 				"code_name": `"code_name":\s*"([^"]+)"`,
 			},
 			want: map[string]string{
 				"code": "500", "message": "Server Error", "result": "false", "code_name": "ERROR", "source": "IncompleteJSON",
+			},
+		},
+		{
+			name:    "application/json; charset=utf-8",
+			payload: []byte(`{"msg":"OK","returnCode":"0","returnValue":0,"seqId":"crhqibfsjtj1cqn2mokg"}`),
+			fieldPatterns: map[string]string{
+				"returnCode":  `"returnCode":\s*"?(\d+)"?`,
+				"returnValue": `"returnValue":\s*(\d+)`,
+				"msg":         `"msg":\s*"([^"]+)"`,
+				"seqId":       `"seqId":\s*"([^"]+)"`,
+			},
+			want: map[string]string{
+				"msg": "OK", "returnCode": "0", "returnValue": "0", "seqId": "crhqibfsjtj1cqn2mokg", "source": "IncompleteJSON",
 			},
 		},
 	}

@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/ZhuoZhuoCrayon/wasm-demo/src/plugins/utils/common"
 	uhttp "github.com/ZhuoZhuoCrayon/wasm-demo/src/plugins/utils/http"
 	"github.com/deepflowio/deepflow-wasm-go-sdk/sdk"
 	"io"
@@ -14,7 +15,8 @@ import (
 )
 
 const (
-	HTTP1 uint8 = 20
+	HTTP1        uint8 = 20
+	MinBodyBytes       = 19
 )
 
 var (
@@ -29,7 +31,7 @@ var expectDataFields = map[string]bool{
 }
 
 var expectFieldPatterns = map[string]string{
-	"code":      `,"code":\s*(\d+)`,
+	"code":      `"code":\s*"?(\d+)"?`,
 	"result":    `"result":\s*([a-zA-Z]+)`,
 	"message":   `"message":\s*"([^"]+)"`,
 	"code_name": `"code_name":\s*"([^"]+)"`,
@@ -44,7 +46,27 @@ func getOrDefault(kv map[string]string, field string, defaultValue string) strin
 	return val
 }
 
+func formatCode(codeStr string) int32 {
+	code, err := strconv.Atoi(codeStr)
+	if err != nil {
+		code = 500
+	}
+	// 0 转为 200
+	if code == 0 {
+		code = 200
+	}
+	return int32(code)
+}
+
+func getStatus(code int32) sdk.RespStatus {
+	if code != 0 && code != 200 {
+		return sdk.RespStatusServerErr
+	}
+	return sdk.RespStatusOk
+}
+
 func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Response, error) {
+
 	if kv == nil || len(kv) == 0 {
 		return nil, nil, ExtractError
 	}
@@ -59,25 +81,21 @@ func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Response, error) {
 	// message：可能存在
 	// code_name：可能存在
 
-	code, ok := kv["code"]
+	codeStr, ok := kv["code"]
 	if !ok {
 		return nil, nil, ExtractError
 	}
 
-	codeInt, err := strconv.Atoi(code)
-	if err != nil {
-		codeInt = 500
-	}
-	codeInt32 := int32(codeInt)
+	code := formatCode(codeStr)
+	status := getStatus(code)
 
 	// handle Error
-	if codeInt32 != 0 && codeInt32 != 200 {
-		status := sdk.RespStatusServerErr
+	if status == sdk.RespStatusServerErr {
 		message := getOrDefault(kv, "message", "")
 		codeName := getOrDefault(kv, "code_name", "ERROR")
 
 		sdkResp := &sdk.Response{
-			Code:      &codeInt32,
+			Code:      &code,
 			Status:    &status,
 			Result:    message,
 			Exception: fmt.Sprintf("%v(%v)", codeName, message),
@@ -86,11 +104,7 @@ func formatKv(kv map[string]string) ([]sdk.KeyVal, *sdk.Response, error) {
 		return attrs, sdkResp, nil
 	}
 
-	status := sdk.RespStatusOk
-	sdkResp := &sdk.Response{
-		Code:   &codeInt32,
-		Status: &status,
-	}
+	sdkResp := &sdk.Response{Code: &code, Status: &status}
 	return attrs, sdkResp, nil
 }
 
@@ -142,7 +156,7 @@ func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
 		return sdk.ActionNext()
 	}
 
-	if baseCtx.BufSize < 19 {
+	if baseCtx.BufSize < MinBodyBytes {
 		return sdk.ActionNext()
 	}
 
@@ -150,29 +164,35 @@ func (p httpHook) OnHttpResp(ctx *sdk.HttpRespCtx) sdk.Action {
 	if err != nil {
 		return sdk.ActionNext()
 	}
-
-	sdk.Warn("[payload] %v", payload)
+	// sdk.Warn("[payload] %v", string(payload))
 
 	resp, err := http.ReadResponse(bufio.NewReader(bytes.NewReader(payload)), &http.Request{})
 	if err != nil {
 		return sdk.ActionNext()
 	}
+	// sdk.Warn("[header] %v", resp.Header)
 
-	sdk.Warn("[header] %v", resp.Header)
+	xBkapiRequestId := resp.Header.Get("X-Bkapi-Request-ID")
+	if len(xBkapiRequestId) == 0 {
+		return sdk.ActionNext()
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	if !common.IsPrefixMatched(contentType, []string{uhttp.JSON, uhttp.PlainText}) {
+		return sdk.ActionNext()
+	}
 
 	body, err := extraBodyFromResp(resp)
 	if err != nil {
 		return sdk.ActionNext()
 	}
-
-	sdk.Warn("[body] %v", string(body))
-
-	kv, err := uhttp.ExtractBytes(body, uhttp.JSON, expectDataFields)
-	if err != nil {
+	if len(body) < MinBodyBytes {
 		return sdk.ActionNext()
 	}
+	// sdk.Warn("[body] %v", string(body))
 
-	if len(kv) == 0 {
+	kv, err := uhttp.ExtractBytes(body, uhttp.JSON, expectDataFields)
+	if err != nil || len(kv) == 0 {
 		kv, err = uhttp.ExtractIncompleteJSON(body, expectFieldPatterns)
 		if err != nil {
 			return sdk.ActionNext()
